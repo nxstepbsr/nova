@@ -4,7 +4,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 
 const PUBLIC_PATHS = ["/login", "/api/login"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Published sites are meant to be publicly shareable — this gate protects
