@@ -12,7 +12,7 @@
  */
 
 import { Redis } from "@upstash/redis";
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -77,13 +77,18 @@ async function getFromRedis(id: string): Promise<SiteDocument | null> {
 
 /* ----------------------------------------------- node:sqlite (dev fallback) */
 
+// Imported dynamically, not statically: this branch should never even be
+// touched in production (Redis is configured there), and a static import
+// would load node:sqlite for every request regardless — a risk not worth
+// taking against a Vercel serverless runtime's exact Node API surface.
 const DB_PATH = join(process.cwd(), "data", "canvas.db");
 let db: DatabaseSync | undefined;
 
-function getDb(): DatabaseSync {
+async function getDb(): Promise<DatabaseSync> {
   if (db) return db;
+  const { DatabaseSync: Database } = await import("node:sqlite");
   mkdirSync(dirname(DB_PATH), { recursive: true });
-  db = new DatabaseSync(DB_PATH);
+  db = new Database(DB_PATH);
   db.exec(`
     CREATE TABLE IF NOT EXISTS published_sites (
       id TEXT PRIMARY KEY,
@@ -94,8 +99,8 @@ function getDb(): DatabaseSync {
   return db;
 }
 
-function publishToSqlite(document: SiteDocument): string {
-  const database = getDb();
+async function publishToSqlite(document: SiteDocument): Promise<string> {
+  const database = await getDb();
   const insert = database.prepare(
     "INSERT INTO published_sites (id, document, created_at) VALUES (?, ?, ?)",
   );
@@ -111,8 +116,8 @@ function publishToSqlite(document: SiteDocument): string {
   throw new Error("Could not generate a unique id for publishing.");
 }
 
-function getFromSqlite(id: string): SiteDocument | null {
-  const database = getDb();
+async function getFromSqlite(id: string): Promise<SiteDocument | null> {
+  const database = await getDb();
   const row = database
     .prepare("SELECT document FROM published_sites WHERE id = ?")
     .get(id) as { document: string } | undefined;
