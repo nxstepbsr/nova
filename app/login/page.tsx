@@ -72,8 +72,12 @@ export default function Login() {
         </div>
         <div>
           <h1 style={{ fontSize: "18px", margin: "0 0 4px", letterSpacing: "-.02em" }}>Canvas</h1>
-          <p style={{ margin: 0, fontSize: "13px", color: "var(--muted, #6a6d66)" }}>
-            Enter the password to continue.
+          <p style={{ margin: "0 0 6px", fontSize: "13px", color: "var(--muted, #6a6d66)" }}>
+            AI website builder — a personal project, not open to the public.
+          </p>
+          <p style={{ margin: 0, fontSize: "12px", color: "var(--muted, #6a6d66)" }}>
+            If you weren&apos;t given a password directly, you&apos;re probably in the wrong
+            place.
           </p>
         </div>
         <input
@@ -81,6 +85,7 @@ export default function Login() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Password"
+          autoComplete="current-password"
           autoFocus
           disabled={submitting}
           style={{
